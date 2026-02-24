@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cognitive Authenticity Engine</title>
+    <meta charset="UTF-8">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #111827);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            width: 950px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 35px;
+            letter-spacing: 1px;
+        }
+
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #3b82f6, #6366f1);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(255,255,255,0.08);
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-size: 16px;
+            resize: none;
+            margin-bottom: 35px;
+        }
+
+        /* Score Section */
+
+        .score-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .score-card {
+            text-align: center;
+        }
+
+        .progress-ring {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: auto;
+        }
+
+        .score-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 42px;
+            font-weight: 700;
+        }
+
+        .risk-label {
+            margin-top: 18px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 500;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .low {
+            background: rgba(34,197,94,0.15);
+            color: #22c55e;
+        }
+
+        .moderate {
+            background: rgba(250,204,21,0.15);
+            color: #facc15;
+        }
+
+        .high {
+            background: rgba(239,68,68,0.15);
+            color: #ef4444;
+        }
+
+        /* Stats */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard">
+    <h1>Cognitive Authenticity Engine</h1>
+
+    <div class="top-section">
+        <button onclick="startSession()">Start Session</button>
+        <div>Session ID: <span id="sessionId">None</span></div>
+    </div>
+
+    <textarea id="answerBox" placeholder="Start typing your answer..."></textarea>
+
+    <!-- Score Section -->
+    <div class="score-wrapper">
+        <div class="score-card">
+            <div class="progress-ring">
+                <svg width="180" height="180">
+                    <circle
+                        cx="90"
+                        cy="90"
+                        r="75"
+                        stroke="#1e293b"
+                        stroke-width="12"
+                        fill="none"
+                    />
+                    <circle
+                        id="progressCircle"
+                        cx="90"
+                        cy="90"
+                        r="75"
+                        stroke="#3b82f6"
+                        stroke-width="12"
+                        fill="none"
+                        stroke-dasharray="471"
+                        stroke-dashoffset="471"
+                        stroke-linecap="round"
+                        transform="rotate(-90 90 90)"
+                        style="transition: stroke-dashoffset 0.6s ease;"
+                    />
+                </svg>
+                <div class="score-number" id="authScore">--</div>
+            </div>
+            <div class="risk-label" id="riskLabel">No Data</div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-card">Z-Score: <span id="zscore">-</span></div>
+        <div class="stat-card">Max Text Jump: <span id="textJump">-</span></div>
+        <div class="stat-card">Mean Flight Time: <span id="flight">-</span></div>
+        <div class="stat-card">Pause Count: <span id="pause">-</span></div>
+    </div>
+
+</div>
+
+<script>
+let sessionId = null;
+
+async function startSession() {
+    const response = await fetch("http://127.0.0.1:8000/session/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidate_id: "demo_user" })
+    });
+
+    const data = await response.json();
+    sessionId = data.session_id;
+    document.getElementById("sessionId").innerText = sessionId;
+
+    await sendEvent("question_shown", {
+        question_id: "q1",
+        difficulty: "medium"
+    });
+}
+
+async function sendEvent(type, payload) {
+    if (!sessionId) return;
+
+    await fetch("http://127.0.0.1:8000/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            session_id: sessionId,
+            event_type: type,
+            timestamp: Date.now(),
+            payload: payload
+        })
+    });
+}
+
+document.getElementById("answerBox").addEventListener("keydown", async (e) => {
+    await sendEvent("keydown", { key: e.key });
+});
+
+document.getElementById("answerBox").addEventListener("input", async (e) => {
+    const length = e.target.value.length;
+    await sendEvent("text_change", { text_length: length });
+    updateScore();
+});
+
+async function updateScore() {
+    if (!sessionId) return;
+
+    const response = await fetch(`http://127.0.0.1:8000/features/${sessionId}`);
+    const data = await response.json();
+
+    const targetScore = Math.round(data.authenticity_score);
+    const scoreElement = document.getElementById("authScore");
+
+    const currentScore = parseInt(scoreElement.innerText) || 0;
+    const duration = 500;
+    const startTime = performance.now();
+
+    function animateScore(timestamp) {
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const value = Math.floor(
+            currentScore + (targetScore - currentScore) * progress
+        );
+        scoreElement.innerText = value + "%";
+
+        if (progress < 1) {
+            requestAnimationFrame(animateScore);
+        }
+    }
+
+    requestAnimationFrame(animateScore);
+
+    document.getElementById("zscore").innerText =
+        data.typing_zscore.toFixed(2);
+    document.getElementById("textJump").innerText =
+        data.max_text_jump;
+    document.getElementById("flight").innerText =
+        data.mean_flight_time_ms.toFixed(2);
+    document.getElementById("pause").innerText =
+        data.pause_count;
+
+    const radius = 75;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (targetScore / 100) * circumference;
+
+    const circle = document.getElementById("progressCircle");
+    circle.style.strokeDashoffset = offset;
+
+    const riskLabel = document.getElementById("riskLabel");
+    riskLabel.innerText = data.risk_level;
+    riskLabel.className = "risk-label";
+
+    if (data.risk_level === "Low") riskLabel.classList.add("low");
+    else if (data.risk_level === "Moderate") riskLabel.classList.add("moderate");
+    else riskLabel.classList.add("high");
+}
+</script>
+
+</body>
+</html>
