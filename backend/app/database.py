@@ -1,20 +1,26 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-DATABASE_URL = os.getenv("postgresql://cognitive_auth_db_user:ypDWxA6hib9F9geQWd7OUIbMdgAYrMJa@dpg-d6ev7pp5pdvs73f39h5g-a/cognitive_auth_db")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable not set")
+
+# Fix Render postgres URL format
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql+psycopg2://",
+        1
+    )
 
 engine = create_engine(DATABASE_URL)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-engine = create_engine(DATABASE_URL)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
 Base = declarative_base()
