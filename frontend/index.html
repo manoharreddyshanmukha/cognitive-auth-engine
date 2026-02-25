@@ -197,7 +197,7 @@
 let sessionId = null;
 
 async function startSession() {
-    const response = await fetch("http://127.0.0.1:8000/session/start", {
+    const response = await fetch("https://cognitive-auth-engine.onrender.com/session/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ candidate_id: "demo_user" })
@@ -216,7 +216,7 @@ async function startSession() {
 async function sendEvent(type, payload) {
     if (!sessionId) return;
 
-    await fetch("http://127.0.0.1:8000/event", {
+    await fetch("https://cognitive-auth-engine.onrender.com/event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -241,7 +241,7 @@ document.getElementById("answerBox").addEventListener("input", async (e) => {
 async function updateScore() {
     if (!sessionId) return;
 
-    const response = await fetch(`http://127.0.0.1:8000/features/${sessionId}`);
+    const response = await fetch(`https://cognitive-auth-engine.onrender.com/features/${sessionId}`);
     const data = await response.json();
 
     const targetScore = Math.round(data.authenticity_score);
