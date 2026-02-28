@@ -67,8 +67,6 @@
             margin-bottom: 35px;
         }
 
-        /* Score Section */
-
         .score-wrapper {
             display: flex;
             justify-content: center;
@@ -105,22 +103,9 @@
             letter-spacing: 0.5px;
         }
 
-        .low {
-            background: rgba(34,197,94,0.15);
-            color: #22c55e;
-        }
-
-        .moderate {
-            background: rgba(250,204,21,0.15);
-            color: #facc15;
-        }
-
-        .high {
-            background: rgba(239,68,68,0.15);
-            color: #ef4444;
-        }
-
-        /* Stats */
+        .low { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .moderate { background: rgba(250,204,21,0.15); color: #facc15; }
+        .high { background: rgba(239,68,68,0.15); color: #ef4444; }
 
         .stats {
             display: grid;
@@ -134,12 +119,71 @@
             border-radius: 14px;
             font-size: 14px;
         }
+
+        /* Footer */
+
+        .divider {
+            margin-top: 50px;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .social-icons {
+            margin-top: 15px;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            margin: 0 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .social-icons a:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(59,130,246,0.4);
+        }
+
+        .social-icons img {
+            width: 22px;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: -28px;
+            background: #1f2937;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            opacity: 0;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+
+        .social-icons a:hover .tooltip {
+            opacity: 1;
+        }
     </style>
 </head>
 
 <body>
 
 <div class="dashboard">
+
     <h1>Cognitive Authenticity Engine</h1>
 
     <div class="top-section">
@@ -149,26 +193,14 @@
 
     <textarea id="answerBox" placeholder="Start typing your answer..."></textarea>
 
-    <!-- Score Section -->
     <div class="score-wrapper">
         <div class="score-card">
             <div class="progress-ring">
                 <svg width="180" height="180">
-                    <circle
-                        cx="90"
-                        cy="90"
-                        r="75"
-                        stroke="#1e293b"
-                        stroke-width="12"
-                        fill="none"
-                    />
-                    <circle
-                        id="progressCircle"
-                        cx="90"
-                        cy="90"
-                        r="75"
-                        stroke="#3b82f6"
-                        stroke-width="12"
+                    <circle cx="90" cy="90" r="75" stroke="#1e293b" stroke-width="12" fill="none"/>
+                    <circle id="progressCircle"
+                        cx="90" cy="90" r="75"
+                        stroke="#3b82f6" stroke-width="12"
                         fill="none"
                         stroke-dasharray="471"
                         stroke-dashoffset="471"
@@ -183,12 +215,31 @@
         </div>
     </div>
 
-    <!-- Stats -->
     <div class="stats">
         <div class="stat-card">Z-Score: <span id="zscore">-</span></div>
         <div class="stat-card">Max Text Jump: <span id="textJump">-</span></div>
         <div class="stat-card">Mean Flight Time: <span id="flight">-</span></div>
         <div class="stat-card">Pause Count: <span id="pause">-</span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="footer">
+        Built by <strong>Yeruva Shanmukha Manohara Reddy</strong>
+
+        <div class="social-icons">
+
+            <a href="https://github.com/manoharreddyshanmukha" target="_blank">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" style="filter: invert(1);">
+                <span class="tooltip">GitHub</span>
+            </a>
+
+            <a href="https://linkedin.com/in/manoharreddy369" target="_blank">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg">
+                <span class="tooltip">LinkedIn</span>
+            </a>
+
+        </div>
     </div>
 
 </div>
@@ -253,33 +304,24 @@ async function updateScore() {
 
     function animateScore(timestamp) {
         const progress = Math.min((timestamp - startTime) / duration, 1);
-        const value = Math.floor(
-            currentScore + (targetScore - currentScore) * progress
-        );
+        const value = Math.floor(currentScore + (targetScore - currentScore) * progress);
         scoreElement.innerText = value + "%";
 
-        if (progress < 1) {
-            requestAnimationFrame(animateScore);
-        }
+        if (progress < 1) requestAnimationFrame(animateScore);
     }
 
     requestAnimationFrame(animateScore);
 
-    document.getElementById("zscore").innerText =
-        data.typing_zscore.toFixed(2);
-    document.getElementById("textJump").innerText =
-        data.max_text_jump;
-    document.getElementById("flight").innerText =
-        data.mean_flight_time_ms.toFixed(2);
-    document.getElementById("pause").innerText =
-        data.pause_count;
+    document.getElementById("zscore").innerText = data.typing_zscore.toFixed(2);
+    document.getElementById("textJump").innerText = data.max_text_jump;
+    document.getElementById("flight").innerText = data.mean_flight_time_ms.toFixed(2);
+    document.getElementById("pause").innerText = data.pause_count;
 
     const radius = 75;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (targetScore / 100) * circumference;
 
-    const circle = document.getElementById("progressCircle");
-    circle.style.strokeDashoffset = offset;
+    document.getElementById("progressCircle").style.strokeDashoffset = offset;
 
     const riskLabel = document.getElementById("riskLabel");
     riskLabel.innerText = data.risk_level;
